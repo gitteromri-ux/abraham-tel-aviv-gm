@@ -484,7 +484,7 @@
     document.getElementById('result-title').textContent = title;
     document.getElementById('result-sub').textContent   = sub;
 
-    // review list
+    // review list — show only ✅/❌ + question, NO correct answers yet
     const ul = document.getElementById('review-list');
     ul.innerHTML = '';
     const wrongOnes = [];
@@ -495,12 +495,9 @@
       li.className = 'review-item ' + (isRight ? 'correct' : 'wrong');
       li.innerHTML = `
         <span class="review-icon">${isRight ? '✅' : '❌'}</span>
-        <span class="review-q">${q.display} = ${q.answer}</span>
+        <span class="review-q">${q.display} = ?</span>
         <span class="review-ans">
-          ${isRight
-            ? `<span class="correct-ans">✔ ${q.answer}</span>`
-            : `ענית: <span class="yours">${userAnswers[i]}</span> &nbsp;|&nbsp; נכון: <span class="correct-ans">${q.answer}</span>`
-          }
+          ${isRight ? `<span class="correct-ans">✔ ${q.answer}</span>` : `ענית: <span class="yours">${userAnswers[i]}</span>`}
         </span>
       `;
       ul.appendChild(li);
@@ -549,7 +546,7 @@
         fb.style.color = 'var(--green)';
         inp.style.borderColor = 'var(--green)';
       } else {
-        fb.textContent = `❌ ${QUESTIONS[idx].answer}`;
+        fb.textContent = `❌ התשובה: ${QUESTIONS[idx].answer}`;
         fb.style.color = 'var(--red)';
         inp.style.borderColor = 'var(--red)';
       }
