@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>מבחן חשבון – איימי</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;700;900&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold: #f5c842;
+      --gold-dark: #c89a00;
+      --gold-light: #fff4b2;
+      --bg: #0f1b35;
+      --card: #162040;
+      --card2: #1e2d55;
+      --text: #f0f4ff;
+      --green: #34d399;
+      --red: #f87171;
+      --radius: 18px;
+    }
+
+    body {
+      font-family: 'Heebo', sans-serif;
+      background: linear-gradient(135deg, #0f1b35 0%, #1a2a5e 60%, #0f1b35 100%);
+      min-height: 100vh;
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 60px;
+    }
+
+    h1.title {
+      font-size: clamp(2rem, 6vw, 3.2rem);
+      font-weight: 900;
+      color: var(--gold);
+      text-shadow: 0 2px 18px rgba(245,200,66,.45);
+      margin-bottom: 6px;
+      text-align: center;
+    }
+    .subtitle {
+      font-size: 1.1rem;
+      color: #a8bce8;
+      margin-bottom: 32px;
+      text-align: center;
+    }
+
+    /* ── PROGRESS BAR ── */
+    .progress-wrap {
+      width: 100%;
+      max-width: 600px;
+      background: #253266;
+      border-radius: 99px;
+      height: 10px;
+      margin-bottom: 28px;
+      overflow: hidden;
+    }
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--gold), #ffb300);
+      border-radius: 99px;
+      transition: width .4s ease;
+    }
+
+    /* ── CARD ── */
+    .card {
+      background: var(--card);
+      border: 1.5px solid #2e3f7a;
+      border-radius: var(--radius);
+      padding: 36px 40px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 8px 40px rgba(0,0,0,.45);
+    }
+
+    /* ── QUESTION SCREEN ── */
+    .q-number {
+      font-size: .95rem;
+      color: #7a91cc;
+      margin-bottom: 8px;
+    }
+    .q-text {
+      font-size: clamp(2.2rem, 7vw, 3.8rem);
+      font-weight: 900;
+      color: var(--gold);
+      letter-spacing: .04em;
+      margin-bottom: 28px;
+      text-align: center;
+      direction: ltr;
+    }
+    .answer-input {
+      width: 100%;
+      background: #0d1630;
+      border: 2.5px solid #2e3f7a;
+      border-radius: 12px;
+      color: var(--text);
+      font-size: 1.6rem;
+      font-family: 'Heebo', sans-serif;
+      font-weight: 700;
+      padding: 14px 20px;
+      text-align: center;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+      direction: ltr;
+    }
+    .answer-input:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(245,200,66,.2);
+    }
+    .answer-input::placeholder { color: #3c5080; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: linear-gradient(135deg, var(--gold), #e8a800);
+      color: #1a1200;
+      font-family: 'Heebo', sans-serif;
+      font-weight: 800;
+      font-size: 1.15rem;
+      border: none;
+      border-radius: 12px;
+      padding: 14px 32px;
+      cursor: pointer;
+      transition: transform .15s, box-shadow .15s, opacity .15s;
+      box-shadow: 0 4px 18px rgba(245,200,66,.35);
+      margin-top: 22px;
+      width: 100%;
+    }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(245,200,66,.5); }
+    .btn:active { transform: translateY(0); }
+    .btn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+    .btn-secondary {
+      background: transparent;
+      color: var(--gold);
+      border: 2px solid var(--gold);
+      box-shadow: none;
+      margin-top: 12px;
+    }
+    .btn-secondary:hover { background: rgba(245,200,66,.08); box-shadow: none; }
+
+    /* ── FEEDBACK INLINE ── */
+    .inline-feedback {
+      margin-top: 14px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      text-align: center;
+      min-height: 28px;
+      border-radius: 8px;
+      padding: 6px 12px;
+    }
+    .feedback-correct { color: var(--green); background: rgba(52,211,153,.1); }
+    .feedback-wrong   { color: var(--red);   background: rgba(248,113,113,.1); }
+
+    /* ── RESULTS SCREEN ── */
+    .score-circle {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      background: conic-gradient(var(--gold) calc(var(--pct)*1%), #253266 0%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 18px;
+      position: relative;
+    }
+    .score-circle::before {
+      content: '';
+      width: 108px;
+      height: 108px;
+      border-radius: 50%;
+      background: var(--card);
+      position: absolute;
+    }
+    .score-inner {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+    .score-num {
+      font-size: 2.6rem;
+      font-weight: 900;
+      color: var(--gold);
+      line-height: 1;
+    }
+    .score-denom { font-size: 1rem; color: #7a91cc; }
+
+    .result-title {
+      font-size: 1.6rem;
+      font-weight: 800;
+      text-align: center;
+      margin-bottom: 6px;
+    }
+    .result-sub {
+      text-align: center;
+      color: #a8bce8;
+      margin-bottom: 28px;
+    }
+
+    .review-list { list-style: none; width: 100%; }
+    .review-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      font-size: 1rem;
+      direction: ltr;
+    }
+    .review-item.correct { background: rgba(52,211,153,.1); border: 1px solid rgba(52,211,153,.25); }
+    .review-item.wrong   { background: rgba(248,113,113,.1); border: 1px solid rgba(248,113,113,.25); }
+    .review-icon { font-size: 1.3rem; flex-shrink: 0; }
+    .review-q    { font-weight: 700; color: var(--gold); font-size: 1.1rem; flex: 1; }
+    .review-ans  { font-size: .92rem; color: #a8bce8; }
+    .review-ans span.yours { color: var(--red); font-weight: 700; }
+    .review-ans span.correct-ans { color: var(--green); font-weight: 700; }
+
+    /* ── PRACTICE WRONG ── */
+    #practice-section { display: none; }
+    .practice-banner {
+      background: linear-gradient(135deg, #1e2d55, #253266);
+      border: 1.5px solid #2e3f7a;
+      border-radius: var(--radius);
+      padding: 20px 28px;
+      margin-top: 24px;
+      width: 100%;
+      max-width: 600px;
+    }
+    .practice-banner h2 {
+      color: var(--gold);
+      font-size: 1.3rem;
+      margin-bottom: 16px;
+    }
+    .practice-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+      direction: ltr;
+    }
+    .practice-q { font-size: 1.5rem; font-weight: 700; color: var(--text); width: 90px; }
+    .practice-input {
+      background: #0d1630;
+      border: 2px solid #2e3f7a;
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 1.25rem;
+      font-weight: 700;
+      font-family: 'Heebo', sans-serif;
+      padding: 8px 14px;
+      width: 100px;
+      text-align: center;
+      outline: none;
+      transition: border-color .2s;
+      direction: ltr;
+    }
+    .practice-input:focus { border-color: var(--gold); }
+    .practice-feedback { font-size: 1rem; font-weight: 700; min-width: 60px; }
+
+    /* ── CELEBRATION OVERLAY ── */
+    #celebration {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      background: rgba(8,12,28,.92);
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 20px;
+    }
+    #celebration.show { display: flex; }
+
+    #fireworks-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .dog-wrap {
+      position: relative;
+      z-index: 2;
+      margin-bottom: 20px;
+    }
+    /* SVG golden retriever inline */
+    .dog-svg { width: 220px; height: 220px; filter: drop-shadow(0 0 30px rgba(255,220,80,.7)); }
+
+    .celeb-grade {
+      position: relative;
+      z-index: 2;
+      font-size: clamp(3rem, 10vw, 6rem);
+      font-weight: 900;
+      color: var(--gold);
+      text-shadow: 0 0 40px rgba(245,200,66,.8), 0 0 80px rgba(245,200,66,.4);
+      line-height: 1;
+      margin-bottom: 8px;
+      animation: pulse 1.2s ease-in-out infinite alternate;
+    }
+    .celeb-msg {
+      position: relative;
+      z-index: 2;
+      font-size: clamp(1.4rem, 4vw, 2rem);
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 24px;
+      text-shadow: 0 2px 12px rgba(0,0,0,.5);
+    }
+    .celeb-name {
+      color: var(--gold);
+    }
+    .btn-close-celeb {
+      position: relative;
+      z-index: 2;
+      display: inline-block;
+      background: var(--gold);
+      color: #1a1200;
+      font-family: 'Heebo', sans-serif;
+      font-weight: 800;
+      font-size: 1.1rem;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 36px;
+      cursor: pointer;
+      transition: transform .15s;
+    }
+    .btn-close-celeb:hover { transform: scale(1.06); }
+
+    @keyframes pulse {
+      from { transform: scale(1);   text-shadow: 0 0 40px rgba(245,200,66,.8); }
+      to   { transform: scale(1.07); text-shadow: 0 0 70px rgba(245,200,66,1); }
+    }
+
+    /* hidden helpers */
+    .hidden { display: none !important; }
+
+    /* paw stamp animation */
+    @keyframes pawIn {
+      0%   { transform: scale(0) rotate(-20deg); opacity: 0; }
+      70%  { transform: scale(1.2) rotate(5deg);  opacity: 1; }
+      100% { transform: scale(1)   rotate(0deg);  opacity: 1; }
+    }
+    .paw-stamp { animation: pawIn .5s cubic-bezier(.34,1.56,.64,1) both; }
+  </style>
+</head>
+<body>
+
+  <!-- CELEBRATION OVERLAY -->
+  <div id="celebration">
+    <canvas id="fireworks-canvas"></canvas>
+
+    <div class="dog-wrap paw-stamp" id="dog-wrap">
+      <!-- White/Cream Golden Retriever SVG -->
+      <svg class="dog-svg" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Body -->
+        <ellipse cx="100" cy="130" rx="60" ry="48" fill="#f5e6b8"/>
+        <!-- Fur shading -->
+        <ellipse cx="100" cy="145" rx="55" ry="30" fill="#f0d99a" opacity=".6"/>
+        <!-- Head -->
+        <ellipse cx="100" cy="75" rx="40" ry="36" fill="#f5e6b8"/>
+        <!-- Snout -->
+        <ellipse cx="100" cy="95" rx="22" ry="14" fill="#ecdcaa"/>
+        <!-- Nose -->
+        <ellipse cx="100" cy="90" rx="9" ry="6" fill="#5a3a1a"/>
+        <ellipse cx="97" cy="88" rx="2.5" ry="1.8" fill="white" opacity=".5"/>
+        <!-- Eyes -->
+        <circle cx="85" cy="70" r="6.5" fill="#3d2200"/>
+        <circle cx="115" cy="70" r="6.5" fill="#3d2200"/>
+        <circle cx="87" cy="68" r="2.2" fill="white"/>
+        <circle cx="117" cy="68" r="2.2" fill="white"/>
+        <!-- Ear left -->
+        <ellipse cx="67" cy="72" rx="16" ry="22" fill="#e8c97a" transform="rotate(-15 67 72)"/>
+        <ellipse cx="67" cy="74" rx="11" ry="16" fill="#f0d99a" opacity=".7" transform="rotate(-15 67 74)"/>
+        <!-- Ear right -->
+        <ellipse cx="133" cy="72" rx="16" ry="22" fill="#e8c97a" transform="rotate(15 133 72)"/>
+        <ellipse cx="133" cy="74" rx="11" ry="16" fill="#f0d99a" opacity=".7" transform="rotate(15 133 74)"/>
+        <!-- Smile -->
+        <path d="M88 102 Q100 112 112 102" stroke="#5a3a1a" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+        <!-- Tongue -->
+        <ellipse cx="100" cy="110" rx="8" ry="6" fill="#f86d8f"/>
+        <line x1="100" y1="105" x2="100" y2="116" stroke="#e05080" stroke-width="1.5"/>
+        <!-- Front legs -->
+        <rect x="72" y="162" width="18" height="30" rx="9" fill="#f0d99a"/>
+        <rect x="110" y="162" width="18" height="30" rx="9" fill="#f0d99a"/>
+        <!-- Paws -->
+        <ellipse cx="81" cy="192" rx="10" ry="7" fill="#e8c97a"/>
+        <ellipse cx="119" cy="192" rx="10" ry="7" fill="#e8c97a"/>
+        <!-- Tail -->
+        <path d="M158 118 Q185 90 175 70 Q165 55 155 75" stroke="#f0d99a" stroke-width="14" stroke-linecap="round" fill="none"/>
+        <!-- Fluffy chest -->
+        <ellipse cx="100" cy="120" rx="28" ry="18" fill="#fdf5e0" opacity=".8"/>
+        <!-- Crown / sparkles -->
+        <text x="100" y="36" font-size="22" text-anchor="middle">👑</text>
+        <!-- Star sparkles around head -->
+        <text x="52" y="52" font-size="14">✨</text>
+        <text x="138" y="52" font-size="14">✨</text>
+      </svg>
+    </div>
+
+    <div class="celeb-grade" id="celeb-grade">10/10</div>
+    <div class="celeb-msg">כל הכבוד <span class="celeb-name">איימי</span>! 🎉<br>את פשוט מדהימה!</div>
+    <button class="btn-close-celeb" onclick="closeCelebration()">תודה! ✨</button>
+  </div>
+
+  <!-- MAIN APP -->
+  <h1 class="title">📐 מבחן חשבון</h1>
+  <p class="subtitle">של <strong>איימי</strong> – 10 שאלות</p>
+
+  <!-- PROGRESS (shown during quiz) -->
+  <div class="progress-wrap" id="progress-wrap">
+    <div class="progress-bar" id="progress-bar" style="width:0%"></div>
+  </div>
+
+  <!-- QUESTION SCREEN -->
+  <div class="card" id="quiz-screen">
+    <div class="q-number" id="q-number">שאלה 1 מתוך 10</div>
+    <div class="q-text" id="q-text">6 × 8 = ?</div>
+    <input
+      class="answer-input"
+      id="answer-input"
+      type="number"
+      inputmode="numeric"
+      placeholder="הכניסי את התשובה..."
+      autocomplete="off"
+    />
+    <div class="inline-feedback hidden" id="inline-feedback"></div>
+    <button class="btn" id="next-btn" onclick="submitAnswer()">הגישי תשובה ➜</button>
+  </div>
+
+  <!-- RESULTS SCREEN -->
+  <div class="card hidden" id="results-screen">
+    <div class="score-circle" id="score-circle">
+      <div class="score-inner">
+        <div class="score-num" id="score-num">0</div>
+        <div class="score-denom">מתוך 10</div>
+      </div>
+    </div>
+    <div class="result-title" id="result-title">כל הכבוד!</div>
+    <div class="result-sub"  id="result-sub">הנה סיכום המבחן שלך:</div>
+
+    <ul class="review-list" id="review-list"></ul>
+
+    <button class="btn" onclick="startOver()">🔄 התחלה מחדש</button>
+  </div>
+
+  <!-- PRACTICE WRONG ANSWERS -->
+  <div id="practice-section" class="practice-banner">
+    <h2>💪 אימון – שאלות שטעית בהן</h2>
+    <div id="practice-rows"></div>
+    <button class="btn" style="max-width:240px;margin-top:8px" onclick="checkPractice()">בדקי תשובות</button>
+  </div>
+
+  <script>
+  /* ===== DATA ===== */
+  const QUESTIONS = [
+    { display: '6 × 8', answer: 48 },
+    { display: '21 ÷ 3', answer: 7  },
+    { display: '87 − 51', answer: 36 },
+    { display: '28 + 43', answer: 71 },
+    { display: '69 − 39', answer: 30 },
+    { display: '7 × 8',  answer: 56 },
+    { display: '18 ÷ 3', answer: 6  },
+    { display: '63 + 25', answer: 88 },
+    { display: '91 − 33', answer: 58 },
+    { display: '4 × 8',  answer: 32 },
+  ];
+
+  let current = 0;
+  let userAnswers = [];
+  let answeredThisQ = false;
+
+  /* ===== QUIZ LOGIC ===== */
+  function showQuestion(idx) {
+    answeredThisQ = false;
+    const q = QUESTIONS[idx];
+    document.getElementById('q-number').textContent = `שאלה ${idx + 1} מתוך ${QUESTIONS.length}`;
+    document.getElementById('q-text').textContent   = `${q.display} = ?`;
+    const inp = document.getElementById('answer-input');
+    inp.value = '';
+    inp.disabled = false;
+    inp.focus();
+    document.getElementById('inline-feedback').classList.add('hidden');
+    document.getElementById('inline-feedback').textContent = '';
+
+    const btn = document.getElementById('next-btn');
+    btn.textContent = 'הגישי תשובה ➜';
+    btn.disabled = false;
+
+    // progress
+    const pct = (idx / QUESTIONS.length) * 100;
+    document.getElementById('progress-bar').style.width = pct + '%';
+  }
+
+  function submitAnswer() {
+    if (answeredThisQ) { advance(); return; }
+
+    const inp = document.getElementById('answer-input');
+    const val = inp.value.trim();
+    if (val === '' || isNaN(Number(val))) {
+      inp.style.borderColor = 'var(--red)';
+      setTimeout(() => inp.style.borderColor = '', 600);
+      return;
+    }
+
+    const given  = Number(val);
+    const correct = QUESTIONS[current].answer;
+    const isRight = given === correct;
+
+    userAnswers[current] = given;
+    answeredThisQ = true;
+    inp.disabled = true;
+
+    const fb = document.getElementById('inline-feedback');
+    fb.classList.remove('hidden', 'feedback-correct', 'feedback-wrong');
+    if (isRight) {
+      fb.textContent = '✅ נכון! מצוין!';
+      fb.classList.add('feedback-correct');
+    } else {
+      fb.textContent = `❌ לא נכון. התשובה הנכונה היא ${correct}`;
+      fb.classList.add('feedback-wrong');
+    }
+
+    const btn = document.getElementById('next-btn');
+    if (current < QUESTIONS.length - 1) {
+      btn.textContent = 'שאלה הבאה ➜';
+    } else {
+      btn.textContent = 'סיים ➜';
+    }
+  }
+
+  function advance() {
+    if (current < QUESTIONS.length - 1) {
+      current++;
+      showQuestion(current);
+    } else {
+      showResults();
+    }
+  }
+
+  /* ===== ENTER KEY ===== */
+  document.getElementById('answer-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      if (!answeredThisQ) { submitAnswer(); }
+      else { advance(); }
+    }
+  });
+
+  /* ===== RESULTS ===== */
+  function showResults() {
+    document.getElementById('quiz-screen').classList.add('hidden');
+    document.getElementById('progress-wrap').classList.add('hidden');
+
+    const score = userAnswers.reduce((acc, ans, i) => acc + (ans === QUESTIONS[i].answer ? 1 : 0), 0);
+
+    // score circle
+    const pct = (score / QUESTIONS.length) * 100;
+    document.getElementById('score-circle').style.setProperty('--pct', pct);
+    document.getElementById('score-num').textContent = score;
+
+    // title message
+    let title, sub;
+    if (score === 10)      { title = '🌟 מושלם! 10 מתוך 10!'; sub = 'את גאונה של חשבון!'; }
+    else if (score >= 9)   { title = '✨ מדהים! כמעט מושלם!'; sub = 'עוד קצת ואת מגיעה לעשר!'; }
+    else if (score >= 7)   { title = '👏 עבודה טובה!'; sub = 'הצלחת בהרבה שאלות!'; }
+    else if (score >= 5)   { title = '💪 ממשיכה לנסות!'; sub = 'קצת עוד אימון ותצליחי!'; }
+    else                   { title = '📚 יש מקום לשיפור'; sub = 'בואי נתאמן על השאלות הקשות!'; }
+
+    document.getElementById('result-title').textContent = title;
+    document.getElementById('result-sub').textContent   = sub;
+
+    // review list
+    const ul = document.getElementById('review-list');
+    ul.innerHTML = '';
+    const wrongOnes = [];
+    QUESTIONS.forEach((q, i) => {
+      const isRight = userAnswers[i] === q.answer;
+      if (!isRight) wrongOnes.push(i);
+      const li = document.createElement('li');
+      li.className = 'review-item ' + (isRight ? 'correct' : 'wrong');
+      li.innerHTML = `
+        <span class="review-icon">${isRight ? '✅' : '❌'}</span>
+        <span class="review-q">${q.display} = ${q.answer}</span>
+        <span class="review-ans">
+          ${isRight
+            ? `<span class="correct-ans">✔ ${q.answer}</span>`
+            : `ענית: <span class="yours">${userAnswers[i]}</span> &nbsp;|&nbsp; נכון: <span class="correct-ans">${q.answer}</span>`
+          }
+        </span>
+      `;
+      ul.appendChild(li);
+    });
+
+    document.getElementById('results-screen').classList.remove('hidden');
+
+    // practice section
+    if (wrongOnes.length > 0) {
+      buildPractice(wrongOnes);
+      document.getElementById('practice-section').style.display = 'block';
+    }
+
+    // celebration
+    if (score >= 9) {
+      setTimeout(() => launchCelebration(score), 700);
+    }
+  }
+
+  /* ===== PRACTICE ===== */
+  function buildPractice(indices) {
+    const container = document.getElementById('practice-rows');
+    container.innerHTML = '';
+    indices.forEach(i => {
+      const row = document.createElement('div');
+      row.className = 'practice-row';
+      row.dataset.idx = i;
+      row.innerHTML = `
+        <span class="practice-q">${QUESTIONS[i].display} =</span>
+        <input class="practice-input" type="number" inputmode="numeric" placeholder="?" data-idx="${i}" />
+        <span class="practice-feedback" id="pf-${i}"></span>
+      `;
+      container.appendChild(row);
+    });
+  }
+
+  function checkPractice() {
+    const inputs = document.querySelectorAll('.practice-input');
+    inputs.forEach(inp => {
+      const idx = Number(inp.dataset.idx);
+      const val = Number(inp.value);
+      const fb  = document.getElementById(`pf-${idx}`);
+      if (inp.value.trim() === '') { fb.textContent = ''; return; }
+      if (val === QUESTIONS[idx].answer) {
+        fb.textContent = '✅ נכון!';
+        fb.style.color = 'var(--green)';
+        inp.style.borderColor = 'var(--green)';
+      } else {
+        fb.textContent = `❌ ${QUESTIONS[idx].answer}`;
+        fb.style.color = 'var(--red)';
+        inp.style.borderColor = 'var(--red)';
+      }
+    });
+  }
+
+  /* ===== START OVER ===== */
+  function startOver() {
+    current = 0;
+    userAnswers = [];
+    document.getElementById('results-screen').classList.add('hidden');
+    document.getElementById('practice-section').style.display = 'none';
+    document.getElementById('progress-wrap').classList.remove('hidden');
+    document.getElementById('quiz-screen').classList.remove('hidden');
+    showQuestion(0);
+  }
+
+  /* ===== CELEBRATION ===== */
+  function launchCelebration(score) {
+    document.getElementById('celeb-grade').textContent = `${score}/10`;
+    document.getElementById('celebration').classList.add('show');
+    startFireworks();
+  }
+
+  function closeCelebration() {
+    document.getElementById('celebration').classList.remove('show');
+    stopFireworks();
+  }
+
+  /* ===== FIREWORKS ===== */
+  let fwFrame;
+  let particles = [];
+
+  function startFireworks() {
+    const canvas = document.getElementById('fireworks-canvas');
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const ctx = canvas.getContext('2d');
+    particles = [];
+
+    let lastBurst = 0;
+    function loop(ts) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (ts - lastBurst > 400) {
+        burst(canvas, ctx);
+        lastBurst = ts;
+      }
+      particles = particles.filter(p => p.life > 0);
+      particles.forEach(p => {
+        p.x  += p.vx;
+        p.y  += p.vy;
+        p.vy += 0.06;           // gravity
+        p.vx *= 0.98;
+        p.vy *= 0.98;
+        p.life -= 1.8;
+        ctx.globalAlpha = Math.max(0, p.life / p.maxLife);
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.globalAlpha = 1;
+      fwFrame = requestAnimationFrame(loop);
+    }
+    fwFrame = requestAnimationFrame(loop);
+  }
+
+  function burst(canvas, ctx) {
+    const x = Math.random() * canvas.width;
+    const y = Math.random() * canvas.height * 0.65 + 30;
+    const COLORS = [
+      '#f5c842','#ff6b6b','#48dbfb','#ff9ff3','#1dd1a1',
+      '#ffeaa7','#fd79a8','#74b9ff','#a29bfe','#ffffff'
+    ];
+    const color = COLORS[Math.floor(Math.random() * COLORS.length)];
+    for (let i = 0; i < 70; i++) {
+      const angle = (Math.PI * 2 / 70) * i + Math.random() * .3;
+      const speed = 1.5 + Math.random() * 3.5;
+      particles.push({
+        x, y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        r: 2 + Math.random() * 2.5,
+        color,
+        life: 80 + Math.random() * 40,
+        maxLife: 120,
+      });
+    }
+  }
+
+  function stopFireworks() {
+    cancelAnimationFrame(fwFrame);
+    const canvas = document.getElementById('fireworks-canvas');
+    canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+    particles = [];
+  }
+
+  window.addEventListener('resize', () => {
+    const canvas = document.getElementById('fireworks-canvas');
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+  });
+
+  /* ===== INIT ===== */
+  showQuestion(0);
+  </script>
+</body>
+</html>
