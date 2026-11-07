@@ -362,7 +362,10 @@
 
   <!-- MAIN APP -->
   <h1 class="title">📐 מבחן חשבון</h1>
-  <p class="subtitle">של <strong>איימי</strong> – 10 שאלות</p>
+  <p class="subtitle">של <strong>איימי</strong> – 12 שאלות</p>
+  <div style="max-width:600px;width:100%;background:#1a2a1a;border:1.5px solid #2d5a2d;border-radius:14px;padding:14px 20px;margin-bottom:20px;color:#7ddb7d;font-size:.95rem;text-align:center;line-height:1.6;">
+    📝 בבקשה פעם הבאה תקפידי להעתיק נכון כשאבא עושה שאלון. חבל על הניקוד
+  </div>
 
   <!-- PROGRESS (shown during quiz) -->
   <div class="progress-wrap" id="progress-wrap">
@@ -389,7 +392,7 @@
     <div class="score-circle" id="score-circle">
       <div class="score-inner">
         <div class="score-num" id="score-num">0</div>
-        <div class="score-denom">מתוך 10</div>
+        <div class="score-denom">מתוך 12</div>
       </div>
     </div>
     <div class="result-title" id="result-title">כל הכבוד!</div>
@@ -410,17 +413,41 @@
   <script>
   /* ===== DATA ===== */
   const QUESTIONS = [
-    { display: '6 × 8', answer: 48 },
-    { display: '21 ÷ 3', answer: 7  },
+    { display: '6 × 8',   answer: 48 },
+    { display: '21 ÷ 3',  answer: 7  },
     { display: '87 − 51', answer: 36 },
     { display: '28 + 43', answer: 71 },
     { display: '69 − 39', answer: 30 },
-    { display: '7 × 8',  answer: 56 },
-    { display: '18 ÷ 3', answer: 6  },
+    { display: '7 × 8',   answer: 56 },
+    { display: '18 ÷ 3',  answer: 6  },
     { display: '63 + 25', answer: 88 },
     { display: '91 − 33', answer: 58 },
-    { display: '4 × 8',  answer: 32 },
+    { display: '4 × 8',   answer: 32 },
+    { display: '24 ÷ 6',  answer: 4  },
+    { display: '71 − 24', answer: 47 },
   ];
+
+  const SAVE_KEY = 'amy_math_progress';
+
+  function saveProgress() {
+    localStorage.setItem(SAVE_KEY, JSON.stringify({ current, userAnswers }));
+  }
+
+  function clearProgress() {
+    localStorage.removeItem(SAVE_KEY);
+  }
+
+  function loadProgress() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(SAVE_KEY));
+      if (saved && typeof saved.current === 'number' && Array.isArray(saved.userAnswers)) {
+        current = saved.current;
+        userAnswers = saved.userAnswers;
+        return true;
+      }
+    } catch(e) {}
+    return false;
+  }
 
   let current = 0;
   let userAnswers = [];
@@ -447,11 +474,13 @@
     }
 
     userAnswers[current] = Number(val);
+    saveProgress();
 
     if (current < QUESTIONS.length - 1) {
       current++;
       showQuestion(current);
     } else {
+      clearProgress();
       showResults();
     }
   }
@@ -475,10 +504,10 @@
 
     // title message
     let title, sub;
-    if (score === 10)      { title = '🌟 מושלם! 10 מתוך 10!'; sub = 'את גאונה של חשבון!'; }
-    else if (score >= 9)   { title = '✨ מדהים! כמעט מושלם!'; sub = 'עוד קצת ואת מגיעה לעשר!'; }
-    else if (score >= 7)   { title = '👏 עבודה טובה!'; sub = 'הצלחת בהרבה שאלות!'; }
-    else if (score >= 5)   { title = '💪 ממשיכה לנסות!'; sub = 'קצת עוד אימון ותצליחי!'; }
+    if (score === 12)      { title = '🌟 מושלם! 12 מתוך 12!'; sub = 'את גאונה של חשבון!'; }
+    else if (score >= 10)  { title = '✨ מדהים! כמעט מושלם!'; sub = 'עוד קצת ואת מגיעה לשתים עשרה!'; }
+    else if (score >= 8)   { title = '👏 עבודה טובה!'; sub = 'הצלחת בהרבה שאלות!'; }
+    else if (score >= 6)   { title = '💪 ממשיכה לנסות!'; sub = 'קצת עוד אימון ותצליחי!'; }
     else                   { title = '📚 יש מקום לשיפור'; sub = 'בואי נתאמן על השאלות הקשות!'; }
 
     document.getElementById('result-title').textContent = title;
@@ -511,10 +540,8 @@
       document.getElementById('practice-section').style.display = 'block';
     }
 
-    // celebration
-    if (score >= 9) {
-      setTimeout(() => launchCelebration(score), 700);
-    }
+    // celebration — always show the dog!
+    setTimeout(() => launchCelebration(score), 700);
   }
 
   /* ===== PRACTICE ===== */
@@ -555,6 +582,7 @@
 
   /* ===== START OVER ===== */
   function startOver() {
+    clearProgress();
     current = 0;
     userAnswers = [];
     document.getElementById('results-screen').classList.add('hidden');
@@ -566,7 +594,14 @@
 
   /* ===== CELEBRATION ===== */
   function launchCelebration(score) {
-    document.getElementById('celeb-grade').textContent = `${score}/10`;
+    document.getElementById('celeb-grade').textContent = `${score}/12`;
+    const n = QUESTIONS.length;
+    let msg;
+    if (score === n)       msg = 'מושלם לגמרי! 🌟 את גאונה של חשבון!';
+    else if (score >= 10)  msg = 'כל הכבוד <span class="celeb-name">איימי</span>! 🎉 את פשוט מדהימה!';
+    else if (score >= 8)   msg = 'עבודה טובה <span class="celeb-name">איימי</span>! 💪 ממשיכים להתאמן!';
+    else                   msg = 'לא נורא <span class="celeb-name">איימי</span>! 🐕 בואי נתאמן שוב!';
+    document.querySelector('.celeb-msg').innerHTML = msg;
     document.getElementById('celebration').classList.add('show');
     startFireworks();
   }
@@ -651,7 +686,8 @@
   });
 
   /* ===== INIT ===== */
-  showQuestion(0);
+  loadProgress();
+  showQuestion(current);
   </script>
 </body>
 </html>
