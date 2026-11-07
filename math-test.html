@@ -430,7 +430,11 @@
   const SAVE_KEY = 'amy_math_progress';
 
   function saveProgress() {
-    localStorage.setItem(SAVE_KEY, JSON.stringify({ current, userAnswers }));
+    localStorage.setItem(SAVE_KEY, JSON.stringify({ current, userAnswers, done: false }));
+  }
+
+  function saveDone() {
+    localStorage.setItem(SAVE_KEY, JSON.stringify({ current, userAnswers, done: true }));
   }
 
   function clearProgress() {
@@ -440,13 +444,12 @@
   function loadProgress() {
     try {
       const saved = JSON.parse(localStorage.getItem(SAVE_KEY));
-      if (saved && typeof saved.current === 'number' && Array.isArray(saved.userAnswers)) {
-        current = saved.current;
-        userAnswers = saved.userAnswers;
-        return true;
-      }
+      if (!saved || !Array.isArray(saved.userAnswers)) return 'none';
+      current     = saved.current;
+      userAnswers = saved.userAnswers;
+      return saved.done ? 'done' : 'mid';
     } catch(e) {}
-    return false;
+    return 'none';
   }
 
   let current = 0;
@@ -480,7 +483,7 @@
       current++;
       showQuestion(current);
     } else {
-      clearProgress();
+      saveDone();
       showResults();
     }
   }
@@ -686,8 +689,14 @@
   });
 
   /* ===== INIT ===== */
-  loadProgress();
-  showQuestion(current);
+  const state = loadProgress();
+  if (state === 'done') {
+    document.getElementById('progress-wrap').classList.add('hidden');
+    document.getElementById('quiz-screen').classList.add('hidden');
+    showResults();
+  } else {
+    showQuestion(current);
+  }
   </script>
 </body>
 </html>
