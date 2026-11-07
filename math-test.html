@@ -143,19 +143,6 @@
     }
     .btn-secondary:hover { background: rgba(245,200,66,.08); box-shadow: none; }
 
-    /* ── FEEDBACK INLINE ── */
-    .inline-feedback {
-      margin-top: 14px;
-      font-size: 1.05rem;
-      font-weight: 700;
-      text-align: center;
-      min-height: 28px;
-      border-radius: 8px;
-      padding: 6px 12px;
-    }
-    .feedback-correct { color: var(--green); background: rgba(52,211,153,.1); }
-    .feedback-wrong   { color: var(--red);   background: rgba(248,113,113,.1); }
-
     /* ── RESULTS SCREEN ── */
     .score-circle {
       width: 140px;
@@ -394,8 +381,7 @@
       placeholder="הכניסי את התשובה..."
       autocomplete="off"
     />
-    <div class="inline-feedback hidden" id="inline-feedback"></div>
-    <button class="btn" id="next-btn" onclick="submitAnswer()">הגישי תשובה ➜</button>
+    <button class="btn" id="next-btn" onclick="submitAnswer()">הבאה ➜</button>
   </div>
 
   <!-- RESULTS SCREEN -->
@@ -438,68 +424,30 @@
 
   let current = 0;
   let userAnswers = [];
-  let answeredThisQ = false;
 
   /* ===== QUIZ LOGIC ===== */
   function showQuestion(idx) {
-    answeredThisQ = false;
     const q = QUESTIONS[idx];
     document.getElementById('q-number').textContent = `שאלה ${idx + 1} מתוך ${QUESTIONS.length}`;
     document.getElementById('q-text').textContent   = `${q.display} = ?`;
     const inp = document.getElementById('answer-input');
     inp.value = '';
-    inp.disabled = false;
+    inp.style.borderColor = '';
     inp.focus();
-    document.getElementById('inline-feedback').classList.add('hidden');
-    document.getElementById('inline-feedback').textContent = '';
-
-    const btn = document.getElementById('next-btn');
-    btn.textContent = 'הגישי תשובה ➜';
-    btn.disabled = false;
-
-    // progress
-    const pct = (idx / QUESTIONS.length) * 100;
-    document.getElementById('progress-bar').style.width = pct + '%';
+    document.getElementById('progress-bar').style.width = ((idx / QUESTIONS.length) * 100) + '%';
   }
 
   function submitAnswer() {
-    if (answeredThisQ) { advance(); return; }
-
     const inp = document.getElementById('answer-input');
     const val = inp.value.trim();
     if (val === '' || isNaN(Number(val))) {
       inp.style.borderColor = 'var(--red)';
-      setTimeout(() => inp.style.borderColor = '', 600);
+      setTimeout(() => inp.style.borderColor = '', 500);
       return;
     }
 
-    const given  = Number(val);
-    const correct = QUESTIONS[current].answer;
-    const isRight = given === correct;
+    userAnswers[current] = Number(val);
 
-    userAnswers[current] = given;
-    answeredThisQ = true;
-    inp.disabled = true;
-
-    const fb = document.getElementById('inline-feedback');
-    fb.classList.remove('hidden', 'feedback-correct', 'feedback-wrong');
-    if (isRight) {
-      fb.textContent = '✅ נכון! מצוין!';
-      fb.classList.add('feedback-correct');
-    } else {
-      fb.textContent = `❌ לא נכון. התשובה הנכונה היא ${correct}`;
-      fb.classList.add('feedback-wrong');
-    }
-
-    const btn = document.getElementById('next-btn');
-    if (current < QUESTIONS.length - 1) {
-      btn.textContent = 'שאלה הבאה ➜';
-    } else {
-      btn.textContent = 'סיים ➜';
-    }
-  }
-
-  function advance() {
     if (current < QUESTIONS.length - 1) {
       current++;
       showQuestion(current);
@@ -510,10 +458,7 @@
 
   /* ===== ENTER KEY ===== */
   document.getElementById('answer-input').addEventListener('keydown', e => {
-    if (e.key === 'Enter') {
-      if (!answeredThisQ) { submitAnswer(); }
-      else { advance(); }
-    }
+    if (e.key === 'Enter') submitAnswer();
   });
 
   /* ===== RESULTS ===== */
